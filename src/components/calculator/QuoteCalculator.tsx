@@ -1,12 +1,13 @@
 "use client";
 
-import { useMemo, useState } from "react";
 import { Flag } from "@/components/brand/Flag";
 import { Button } from "@/components/ui/Button";
 import { Stamp } from "@/components/ui/Stamp";
 import { DESTINATION_CODES, getCountry, type CountryCode } from "@/lib/corridors";
-import { formatMoney, formatNumber } from "@/lib/format";
+import { formatDateTime, formatMoney, formatNumber, formatRate } from "@/lib/format";
 import { quoteFromSoles, RATE_DISCLAIMER } from "@/lib/rates";
+import { useRates } from "@/lib/use-rates";
+import { useState } from "react";
 
 type QuoteCalculatorProps = {
   ctaHref?: string;
@@ -21,12 +22,15 @@ export function QuoteCalculator({
 }: QuoteCalculatorProps) {
   const [amount, setAmount] = useState("1000");
   const [destination, setDestination] = useState<CountryCode>("EC");
+  const rates = useRates();
   const sendAmount = Number(amount.replace(",", ".")) || 0;
-  const quote = useMemo(
-    () => quoteFromSoles(sendAmount, destination),
-    [sendAmount, destination],
-  );
   const dest = getCountry(destination);
+  const liveRate =
+    rates.status === "ready" ? rates.data.rates[destination]?.rate : 0;
+  const commission =
+    rates.status === "ready" ? rates.data.commissionPen : 0;
+  const quote = quoteFromSoles(sendAmount, destination, liveRate, commission);
+  const ready = rates.status === "ready" && liveRate > 0;
 
   return (
     <section
@@ -44,7 +48,7 @@ export function QuoteCalculator({
             Envías soles, recibe {dest.currencyShort}
           </h2>
         </div>
-        <Stamp>Ejemplo</Stamp>
+        <Stamp>Referencia</Stamp>
       </div>
 
       <div className="relative mt-6">
@@ -74,65 +78,96 @@ export function QuoteCalculator({
         </div>
       </div>
 
-      <div className="relative mt-5 grid gap-3">
-        <label className="rounded-2xl border border-ink/10 bg-paper px-4 py-3">
-          <span className="flex items-center justify-between text-[11px] font-bold uppercase tracking-[0.14em] text-ink/45">
-            Envías
-            <span className="rounded-full bg-white px-2 py-0.5 text-[10px] tracking-[0.12em] text-ink/70">
-              Soles · PEN
-            </span>
-          </span>
-          <input
-            inputMode="decimal"
-            value={amount}
-            onChange={(e) => setAmount(e.target.value.replace(/[^\d.,]/g, ""))}
-            className="mt-1 w-full bg-transparent font-display text-[40px] leading-none tracking-[-0.03em] text-ink outline-none"
-            aria-label="Monto a enviar en soles"
-          />
-        </label>
-
-        <div className="flex justify-center">
-          <span className="grid h-9 w-9 place-items-center rounded-full border border-ink/10 bg-yellow text-ink">
-            <svg viewBox="0 0 16 16" className="h-4 w-4" fill="none" aria-hidden>
-              <path
-                d="M8 2v12M4 10l4 4 4-4"
-                stroke="currentColor"
-                strokeWidth="1.7"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-            </svg>
-          </span>
-        </div>
-
-        <div className="rounded-2xl border border-ink/10 bg-navy px-4 py-3 text-white">
-          <span className="flex items-center justify-between text-[11px] font-bold uppercase tracking-[0.14em] text-white/50">
-            Recibe
-            <span className="rounded-full bg-white/10 px-2 py-0.5 text-[10px] tracking-[0.12em] text-white/80">
-              {dest.currencyName} · {dest.currency}
-            </span>
-          </span>
-          <p className="mt-1 font-display text-[40px] leading-none tracking-[-0.03em]">
-            {formatNumber(
-              quote.receiveAmount,
-              dest.currency === "COP" || dest.currency === "CLP" ? 0 : 2,
-            )}
+      {rates.status === "error" ? (
+        <div className="relative mt-5 rounded-2xl border border-[#9B1C1C]/20 bg-[#9B1C1C]/5 px-4 py-4">
+          <p className="text-[14px] font-semibold text-[#9B1C1C]">
+            No hay tipo de cambio disponible
           </p>
+          <p className="mt-1 text-[13px] leading-6 text-muted">{rates.message}</p>
+          <Button type="button" variant="line" className="mt-3" onClick={rates.reload}>
+            Reintentar
+          </Button>
         </div>
-      </div>
+      ) : (
+        <>
+          <div className="relative mt-5 grid gap-3">
+            <label className="rounded-2xl border border-ink/10 bg-paper px-4 py-3">
+              <span className="flex items-center justify-between text-[11px] font-bold uppercase tracking-[0.14em] text-ink/45">
+                Envías
+                <span className="rounded-full bg-white px-2 py-0.5 text-[10px] tracking-[0.12em] text-ink/70">
+                  Soles · PEN
+                </span>
+              </span>
+              <input
+                inputMode="decimal"
+                value={amount}
+                onChange={(e) => setAmount(e.target.value.replace(/[^\d.,]/g, ""))}
+                className="mt-1 w-full bg-transparent font-display text-[40px] leading-none tracking-[-0.03em] text-ink outline-none"
+                aria-label="Monto a enviar en soles"
+              />
+            </label>
 
-      <dl className="relative mt-5 divide-y divide-ink/8 rounded-2xl border border-ink/10 bg-paper-2">
-        <Row
-          label="Tipo de cambio"
-          value={`1 PEN = ${formatNumber(quote.rate, quote.rate < 1 ? 2 : 2)} ${dest.currency}`}
-        />
-        <Row label="Comisión" value={formatMoney(quote.commission, "PEN")} />
-        <Row
-          label="Monto total"
-          value={formatMoney(quote.totalToTransfer, "PEN")}
-          strong
-        />
-      </dl>
+            <div className="flex justify-center">
+              <span className="grid h-9 w-9 place-items-center rounded-full border border-ink/10 bg-yellow text-ink">
+                <svg viewBox="0 0 16 16" className="h-4 w-4" fill="none" aria-hidden>
+                  <path
+                    d="M8 2v12M4 10l4 4 4-4"
+                    stroke="currentColor"
+                    strokeWidth="1.7"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                </svg>
+              </span>
+            </div>
+
+            <div className="rounded-2xl border border-ink/10 bg-navy px-4 py-3 text-white">
+              <span className="flex items-center justify-between text-[11px] font-bold uppercase tracking-[0.14em] text-white/50">
+                Recibe
+                <span className="rounded-full bg-white/10 px-2 py-0.5 text-[10px] tracking-[0.12em] text-white/80">
+                  {dest.currencyName} · {dest.currency}
+                </span>
+              </span>
+              <p className="mt-1 font-display text-[40px] leading-none tracking-[-0.03em]">
+                {ready
+                  ? formatNumber(
+                      quote.receiveAmount,
+                      dest.currency === "COP" || dest.currency === "CLP" ? 0 : 2,
+                    )
+                  : "—"}
+              </p>
+            </div>
+          </div>
+
+          <dl className="relative mt-5 divide-y divide-ink/8 rounded-2xl border border-ink/10 bg-paper-2">
+            <Row
+              label="Tipo de cambio"
+              value={
+                ready
+                  ? `1 PEN = ${formatRate(quote.rate)} ${dest.currency}`
+                  : "Cargando…"
+              }
+            />
+            <Row
+              label="Comisión"
+              value={ready ? formatMoney(quote.commission, "PEN") : "—"}
+            />
+            <Row
+              label="Monto total"
+              value={ready ? formatMoney(quote.totalToTransfer, "PEN") : "—"}
+              strong
+            />
+            <Row
+              label="Actualizado"
+              value={
+                rates.status === "ready"
+                  ? formatDateTime(rates.data.updatedAt)
+                  : "…"
+              }
+            />
+          </dl>
+        </>
+      )}
 
       <p className="relative mt-3 text-[12px] leading-5 text-muted">{RATE_DISCLAIMER}</p>
 

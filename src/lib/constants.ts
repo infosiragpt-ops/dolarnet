@@ -7,4 +7,4 @@ export const WHATSAPP_MESSAGE =
 export const WHATSAPP_URL = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(WHATSAPP_MESSAGE)}`;
 
 export const DEMO_NOTICE =
-  "Esta es una demostración con datos locales. No procesa pagos reales ni verifica identidad con un proveedor de KYC.";
+  "La verificación guarda celular y documento en este navegador. No hay un proveedor de KYC ni se liquidan pagos bancarios automáticos.";

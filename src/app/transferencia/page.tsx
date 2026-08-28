@@ -8,13 +8,15 @@ import { Field, inputClass, selectClass } from "@/components/ui/Field";
 import { Stamp } from "@/components/ui/Stamp";
 import { BANKS_BY_COUNTRY, DESTINATION_CODES, getCountry, type CountryCode } from "@/lib/corridors";
 import { DOLARNETT_DEPOSIT_ACCOUNTS } from "@/lib/demo-data";
-import { formatMoney, formatNumber } from "@/lib/format";
+import { formatDateTime, formatMoney, formatNumber, formatRate } from "@/lib/format";
 import { quoteFromSoles, RATE_DISCLAIMER } from "@/lib/rates";
+import { useRates } from "@/lib/use-rates";
 import { useStore } from "@/lib/store";
 import type { AccountType } from "@/lib/types";
 
 export default function TransferenciaPage() {
   const { accounts, addAccount, addTransfer } = useStore();
+  const rates = useRates();
   const [step, setStep] = useState<1 | 2 | 3 | 4>(1);
   const [amount, setAmount] = useState("800");
   const [destination, setDestination] = useState<CountryCode>("EC");
@@ -25,15 +27,26 @@ export default function TransferenciaPage() {
   const [type, setType] = useState<AccountType>("ahorros");
   const [doneId, setDoneId] = useState<string | null>(null);
 
+  const liveRate =
+    rates.status === "ready" ? rates.data.rates[destination]?.rate : 0;
+  const commission =
+    rates.status === "ready" ? rates.data.commissionPen : 0;
   const quote = useMemo(
-    () => quoteFromSoles(Number(amount.replace(",", ".")) || 0, destination),
-    [amount, destination],
+    () =>
+      quoteFromSoles(
+        Number(amount.replace(",", ".")) || 0,
+        destination,
+        liveRate,
+        commission,
+      ),
+    [amount, destination, liveRate, commission],
   );
+  const quoteReady = rates.status === "ready" && liveRate > 0;
   const destAccounts = accounts.filter((a) => a.country === destination);
   const selected = accounts.find((a) => a.id === accountId);
 
   function continueToAccounts() {
-    if (quote.sendAmount <= 0) return;
+    if (!quoteReady || quote.sendAmount <= 0) return;
     setStep(2);
   }
 
@@ -97,7 +110,7 @@ export default function TransferenciaPage() {
         <div className="mt-8 max-w-xl rounded-[28px] border border-ink/10 bg-white p-6">
           <div className="flex justify-between">
             <p className="text-[13px] font-semibold text-muted">País destino</p>
-            <Stamp>Tarifa de ejemplo</Stamp>
+            <Stamp>Referencia</Stamp>
           </div>
           <div className="mt-3 flex flex-wrap gap-2">
             {DESTINATION_CODES.map((code) => (
@@ -130,32 +143,63 @@ export default function TransferenciaPage() {
               />
             </Field>
           </div>
-          <dl className="mt-5 space-y-2 text-[14px]">
-            <div className="flex justify-between">
-              <dt className="text-muted">Recibe</dt>
-              <dd className="font-extrabold">
-                {formatNumber(quote.receiveAmount)} {quote.currency}
-              </dd>
+          {rates.status === "error" ? (
+            <div className="mt-5 rounded-2xl border border-[#9B1C1C]/20 bg-[#9B1C1C]/5 px-4 py-4">
+              <p className="text-[14px] font-semibold text-[#9B1C1C]">
+                No hay tipo de cambio disponible
+              </p>
+              <p className="mt-1 text-[13px] text-muted">{rates.message}</p>
+              <Button type="button" variant="line" className="mt-3" onClick={rates.reload}>
+                Reintentar
+              </Button>
             </div>
-            <div className="flex justify-between">
-              <dt className="text-muted">Tipo de cambio</dt>
-              <dd className="font-semibold">
-                1 PEN = {formatNumber(quote.rate)} {quote.currency}
-              </dd>
-            </div>
-            <div className="flex justify-between">
-              <dt className="text-muted">Comisión</dt>
-              <dd className="font-semibold">{formatMoney(quote.commission, "PEN")}</dd>
-            </div>
-            <div className="flex justify-between">
-              <dt className="text-muted">Monto total</dt>
-              <dd className="font-extrabold">
-                {formatMoney(quote.totalToTransfer, "PEN")}
-              </dd>
-            </div>
-          </dl>
+          ) : (
+            <dl className="mt-5 space-y-2 text-[14px]">
+              <div className="flex justify-between">
+                <dt className="text-muted">Recibe</dt>
+                <dd className="font-extrabold">
+                  {quoteReady
+                    ? `${formatNumber(quote.receiveAmount)} ${quote.currency}`
+                    : "Cargando…"}
+                </dd>
+              </div>
+              <div className="flex justify-between">
+                <dt className="text-muted">Tipo de cambio</dt>
+                <dd className="font-semibold">
+                  {quoteReady
+                    ? `1 PEN = ${formatRate(quote.rate)} ${quote.currency}`
+                    : "—"}
+                </dd>
+              </div>
+              <div className="flex justify-between">
+                <dt className="text-muted">Comisión</dt>
+                <dd className="font-semibold">
+                  {quoteReady ? formatMoney(quote.commission, "PEN") : "—"}
+                </dd>
+              </div>
+              <div className="flex justify-between">
+                <dt className="text-muted">Monto total</dt>
+                <dd className="font-extrabold">
+                  {quoteReady ? formatMoney(quote.totalToTransfer, "PEN") : "—"}
+                </dd>
+              </div>
+              <div className="flex justify-between">
+                <dt className="text-muted">Actualizado</dt>
+                <dd className="text-[13px] font-semibold">
+                  {rates.status === "ready"
+                    ? formatDateTime(rates.data.updatedAt)
+                    : "…"}
+                </dd>
+              </div>
+            </dl>
+          )}
           <p className="mt-3 text-[12px] text-muted">{RATE_DISCLAIMER}</p>
-          <Button type="button" className="mt-6 w-full" onClick={continueToAccounts}>
+          <Button
+            type="button"
+            className="mt-6 w-full"
+            onClick={continueToAccounts}
+            disabled={!quoteReady || quote.sendAmount <= 0}
+          >
             Continuar
           </Button>
         </div>
@@ -257,8 +301,9 @@ export default function TransferenciaPage() {
         <div className="mt-8 max-w-xl rounded-[28px] border border-ink/10 bg-white p-6">
           <h2 className="text-[18px] font-extrabold">Transfiere a Dolarnett</h2>
           <p className="mt-2 text-[14px] leading-6 text-muted">
-            Transfiere {formatMoney(quote.totalToTransfer, "PEN")} a una de estas
-            cuentas de ejemplo. No son cuentas reales de cobro.
+            Transfiere {formatMoney(quote.totalToTransfer, "PEN")} a una cuenta
+            de Dolarnett. Estas son cuentas de cobro de referencia para el
+            flujo; confirma el número vigente antes de depositar.
           </p>
           <ul className="mt-5 space-y-3">
             {DOLARNETT_DEPOSIT_ACCOUNTS.map((item) => (
@@ -278,7 +323,7 @@ export default function TransferenciaPage() {
               Volver
             </Button>
             <Button type="button" className="flex-1" onClick={confirm}>
-              Ya transferí (demo)
+              Ya transferí
             </Button>
           </div>
         </div>
@@ -293,8 +338,9 @@ export default function TransferenciaPage() {
             Envío {doneId ? "en espera de acreditación" : "creado"}
           </h2>
           <p className="mt-4 text-[15px] leading-7 text-muted">
-            En producción, Dolarnett confirmaría el depósito y acreditaría al
-            destino. Aquí solo queda el registro local en el historial.
+            Quedó registrada en tu historial con el tipo de cambio de
+            referencia usado en esta cotización. La acreditación en destino
+            depende de que el depósito se confirme.
           </p>
           <div className="mt-6 flex flex-wrap gap-2">
             <Button href="/historial">Ver historial</Button>

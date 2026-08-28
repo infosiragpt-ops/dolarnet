@@ -41,11 +41,11 @@ export default function DashboardPage() {
             Estado de cuenta
           </p>
           <p className="mt-3 text-[18px] font-extrabold">
-            {verified ? "Verificada (demo)" : "Pendiente de verificar"}
+            {verified ? "Perfil completo" : "Pendiente de verificar"}
           </p>
           <p className="mt-2 text-[14px] leading-6 text-muted">
             {verified
-              ? "Puedes cotizar y registrar envíos de demostración."
+              ? "Puedes cotizar con el tipo de cambio de referencia y registrar un envío."
               : "Completa celular y documento para marcar la cuenta como lista."}
           </p>
           {!verified ? (

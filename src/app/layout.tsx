@@ -24,7 +24,7 @@ export const metadata: Metadata = {
     template: `%s · ${SITE_NAME}`,
   },
   description:
-    "Envía dinero rápido, fácil y barato entre Perú, Ecuador, Chile, Colombia y México. Comisión baja y tipo de cambio real — cotizaciones de ejemplo en esta versión.",
+    "Envía dinero rápido, fácil y barato entre Perú, Ecuador, Chile, Colombia y México. Cotizador con tipo de cambio de referencia en vivo desde soles.",
   applicationName: SITE_NAME,
   metadataBase: new URL("https://dolarnett.com"),
   icons: { icon: "/favicon.svg" },

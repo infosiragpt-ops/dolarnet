@@ -7,12 +7,12 @@ export const FAQ: FaqItem[] = [
   {
     question: "¿A qué países puedo enviar?",
     answer:
-      "Los corredores de esta versión son Chile, Colombia, Ecuador, México y Perú. Cotizas en soles peruanos y el destinatario recibe en la moneda local del país elegido.",
+      "Los corredores son Chile (CLP), Colombia (COP), México (MXN), Ecuador (USD) y Perú (USD). Cotizas en soles peruanos.",
   },
   {
     question: "¿Los tipos de cambio del calculador son en vivo?",
     answer:
-      "No. Están marcados como tarifas de ejemplo y replican las cifras del calculador actual en WordPress para que el flujo se pueda probar. No son una cotización de mercado ni una oferta vinculante.",
+      "Sí: el cotizador pide tipos PEN en vivo a ExchangeRate-API (feed abierto, o la API con clave si configuras EXCHANGE_RATE_API_KEY). Se muestran como tipo de cambio de referencia de mercado, no como una liquidación bancaria garantizada. Si el proveedor falla, el cotizador muestra error y no inventa cifras.",
   },
   {
     question: "¿Cómo funciona un envío?",

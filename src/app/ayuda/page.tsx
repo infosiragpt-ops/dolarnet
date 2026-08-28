@@ -6,7 +6,7 @@ import { WHATSAPP_URL } from "@/lib/constants";
 export const metadata: Metadata = {
   title: "Ayuda",
   description:
-    "Preguntas frecuentes sobre envíos Dolarnett, cotizaciones de ejemplo y el estado de esta aplicación.",
+    "Preguntas frecuentes sobre envíos Dolarnett, el cotizador en vivo y el estado de esta aplicación.",
 };
 
 export default function AyudaPage() {

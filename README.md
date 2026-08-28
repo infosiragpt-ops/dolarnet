@@ -67,11 +67,15 @@ Rutas protegidas (redirigen a `/login` si no hay sesión): `/dashboard`, `/trans
 - Panel: verificar cuenta, nueva transferencia, cuentas destino e historial
 - Botón de WhatsApp (el mismo número publicado en el sitio actual)
 
-Las cotizaciones y el flujo de envío siguen siendo de producto/demo (no liquidan pagos reales ni hay proveedor de KYC). La **sesión** sí es Auth.js.
+El cotizador usa **tipos de cambio en vivo** (referencia de mercado). Los envíos y la verificación se guardan por usuario; no hay liquidación bancaria automática ni un proveedor de KYC.
 
-## Tarifas
+## Tipos de cambio
 
-El cotizador usa **tipos de cambio y comisión de ejemplo**, etiquetados en la interfaz. Reutilizan las cifras del calculador de WordPress para que el flujo se pueda probar. **No son datos de mercado en vivo ni una oferta vinculante.**
+`GET /api/rates` pide `https://open.er-api.com/v6/latest/PEN` (ExchangeRate-API, sin clave). Si existe `EXCHANGE_RATE_API_KEY`, usa `https://v6.exchangerate-api.com/v6/${KEY}/latest/PEN`. La respuesta se cachea 12 minutos.
+
+Corredores desde soles (PEN): Chile → CLP, Colombia → COP, México → MXN, Ecuador → USD, Perú → USD.
+
+El cotizador muestra tipo de cambio, comisión (`COMMISSION_PEN`, por defecto 0), monto total y la hora de actualización del proveedor. Si el feed falla, se muestra error: **no se inventan cifras**. El tipo de cambio es de **referencia de mercado**, no una liquidación bancaria garantizada.
 
 ## Lo que no afirmamos
 

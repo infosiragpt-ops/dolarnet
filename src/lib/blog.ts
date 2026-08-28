@@ -12,14 +12,14 @@ export const POSTS: BlogPost[] = [
     slug: "como-leer-una-cotizacion",
     title: "Cómo leer una cotización: tipo de cambio, comisión y total",
     excerpt:
-      "Tres cifras distintas aparecen en cada envío. Esta guía explica qué paga el remitente y qué llega a destino, sin tratar los números de ejemplo como mercado en vivo.",
+      "Tres cifras distintas aparecen en cada envío. Esta guía explica qué paga el remitente y qué llega a destino, y por qué el tipo de cambio es de referencia de mercado.",
     date: "2026-08-18",
     readingMinutes: 5,
     body: [
-      "Una cotización de envío no es un solo número. En Dolarnett mostramos tres piezas: el tipo de cambio de ejemplo, la comisión de ejemplo y el monto total que tendrías que transferir a nuestras cuentas.",
-      "El tipo de cambio convierte soles peruanos a la moneda del país destino. En esta versión del sitio usamos cifras claramente marcadas como ejemplo — las mismas que el calculador actual de WordPress — para que puedas recorrer el flujo sin confundirlas con un precio de mercado en tiempo real.",
-      "La comisión es el costo del servicio en esta demostración (S/ 4.90). El monto total es lo que enviarías a Dolarnett: el monto que cotizaste más esa comisión. El destinatario recibe el monto cotizado convertido, no una cifra recortada en silencio.",
-      "Antes de mover dinero de verdad, conviene confirmar la cotización vigente, el banco destino y el titular de la cuenta. Esta app todavía no liquida pagos; sirve para diseñar y seguir programando el producto.",
+      "Una cotización de envío no es un solo número. En Dolarnett mostramos el tipo de cambio de referencia, la comisión (si hay) y el monto total que tendrías que transferir a nuestras cuentas.",
+      "El tipo de cambio convierte soles peruanos a la moneda del corredor: CLP, COP, MXN o USD (Ecuador y Perú). Lo tomamos en vivo de ExchangeRate-API y lo etiquetamos como referencia de mercado, no como el monto exacto que un banco acreditará.",
+      "La comisión es configurable (por defecto 0). El monto total es lo que enviarías a Dolarnett: el monto cotizado más esa comisión. El destinatario recibe el monto cotizado convertido.",
+      "Antes de mover dinero, confirma la cotización vigente, el banco destino y el titular de la cuenta.",
     ],
   },
   {
@@ -30,7 +30,7 @@ export const POSTS: BlogPost[] = [
     date: "2026-08-10",
     readingMinutes: 6,
     body: [
-      "Dolarnett nace en Perú y opera corredores hacia Ecuador, Chile, Colombia, México y el propio Perú. Cada destino usa su moneda local: dólares en Ecuador, pesos chilenos, pesos colombianos, pesos mexicanos y soles.",
+      "Dolarnett nace en Perú y opera corredores hacia Ecuador, Chile, Colombia, México y el propio Perú. Recibes CLP en Chile, COP en Colombia, MXN en México y USD en Ecuador y Perú.",
       "El flujo es el mismo en todos los corredores. Primero cotizas en soles. Luego eliges o cargas una cuenta destino — banco, titular y número. Después transfieres el total a una cuenta de Dolarnett y esperas la acreditación en el país de destino.",
       "Los bancos que mostramos en la portada (BCP, BBVA, Banco de la Nación, Banco Pichincha, Scotiabank e Interbank) son los que el producto actual menciona como opciones frecuentes. No son una lista cerrada ni una alianza publicitada; en el panel puedes registrar otro banco si lo necesitas.",
       "No inventamos plazos de entrega universales. El tiempo depende de que la transferencia a Dolarnett se acredite y de los horarios del banco destino. Si tienes una operación en curso, el canal más directo hoy es WhatsApp.",

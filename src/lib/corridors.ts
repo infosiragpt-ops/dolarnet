@@ -1,10 +1,12 @@
 export type CountryCode = "CL" | "CO" | "EC" | "MX" | "PE";
 
+export type QuoteCurrency = "CLP" | "COP" | "MXN" | "USD";
+
 export type Country = {
   code: CountryCode;
   name: string;
   adjective: string;
-  currency: string;
+  currency: QuoteCurrency;
   currencyName: string;
   currencyShort: string;
 };
@@ -46,9 +48,9 @@ export const COUNTRIES: Country[] = [
     code: "PE",
     name: "Perú",
     adjective: "peruano",
-    currency: "PEN",
-    currencyName: "Soles",
-    currencyShort: "soles",
+    currency: "USD",
+    currencyName: "Dólares",
+    currencyShort: "dólares",
   },
 ];
 
@@ -59,6 +61,14 @@ export const COUNTRY_BY_CODE = Object.fromEntries(
 export const DESTINATION_CODES: CountryCode[] = ["CO", "EC", "MX", "PE", "CL"];
 
 export const RESIDENCE_CODES: CountryCode[] = ["CL", "CO", "EC", "MX", "PE"];
+
+export const FX_CURRENCY_BY_COUNTRY: Record<CountryCode, QuoteCurrency> = {
+  CL: "CLP",
+  CO: "COP",
+  EC: "USD",
+  MX: "MXN",
+  PE: "USD",
+};
 
 export const BANKS_SHOWN = [
   "BCP",

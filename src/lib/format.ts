@@ -22,6 +22,12 @@ export function formatNumber(amount: number, fractionDigits = 2): string {
   }).format(amount);
 }
 
+export function formatRate(rate: number): string {
+  if (rate < 1) return formatNumber(rate, 4);
+  if (rate < 20) return formatNumber(rate, 4);
+  return formatNumber(rate, 2);
+}
+
 export function formatDate(iso: string): string {
   return new Intl.DateTimeFormat(locale, {
     day: "2-digit",

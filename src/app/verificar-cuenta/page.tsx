@@ -70,7 +70,7 @@ export default function VerificarCuentaPage() {
           Verificar cuenta
         </p>
         <h1 className="mt-2 font-display text-[40px] leading-none">
-          {complete ? "Tu cuenta ya está verificada en esta demo" : titleFor(step)}
+          {complete ? "Tus datos de verificación están guardados" : titleFor(step)}
         </h1>
         <p className="mt-4 text-[14px] leading-6 text-muted">{DEMO_NOTICE}</p>
 
