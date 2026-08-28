@@ -1,0 +1,61 @@
+@import "tailwindcss";
+
+:root {
+  --yellow: #ffd400;
+  --yellow-deep: #efc200;
+  --ink: #0b0b0b;
+  --muted: #5c5748;
+  --paper: #fffdf6;
+  --paper-2: #f4efe0;
+  --line: #e6dfc8;
+  --navy: #101820;
+  --navy-2: #1a2430;
+  --success: #0b7a45;
+}
+
+@theme inline {
+  --color-yellow: var(--yellow);
+  --color-yellow-deep: var(--yellow-deep);
+  --color-ink: var(--ink);
+  --color-muted: var(--muted);
+  --color-paper: var(--paper);
+  --color-paper-2: var(--paper-2);
+  --color-line: var(--line);
+  --color-navy: var(--navy);
+  --color-navy-2: var(--navy-2);
+  --color-success: var(--success);
+  --font-sans: var(--font-jakarta);
+  --font-display: var(--font-newsreader);
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--font-jakarta), ui-sans-serif, system-ui, sans-serif;
+  font-feature-settings: "ss01" on, "cv11" on;
+}
+
+.font-display {
+  font-family: var(--font-newsreader), ui-serif, Georgia, serif;
+  font-optical-sizing: auto;
+}
+
+::selection {
+  background: var(--yellow);
+  color: var(--ink);
+}
+
+.paper-grid {
+  background-image:
+    linear-gradient(to right, rgba(11, 11, 11, 0.035) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(11, 11, 11, 0.035) 1px, transparent 1px);
+  background-size: 48px 48px;
+}
+
+.hairline {
+  box-shadow: inset 0 0 0 1px rgba(11, 11, 11, 0.08);
+}
