@@ -1,0 +1,10 @@
+export const SITE_NAME = "Dolarnett";
+export const SITE_TAGLINE = "Envíos internacionales de dinero";
+export const WHATSAPP_NUMBER = "51983801978";
+export const WHATSAPP_MESSAGE =
+  "Hola, quiero información sobre un envío con Dolarnett.";
+
+export const WHATSAPP_URL = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(WHATSAPP_MESSAGE)}`;
+
+export const DEMO_NOTICE =
+  "La verificación guarda celular y documento en este navegador. No hay un proveedor de KYC ni se liquidan pagos bancarios automáticos.";
