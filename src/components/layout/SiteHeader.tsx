@@ -2,10 +2,11 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useSession } from "next-auth/react";
 import { useState } from "react";
+import { SignOutButton } from "@/components/auth/SignOutButton";
 import { Logo } from "@/components/brand/Logo";
 import { Button } from "@/components/ui/Button";
-import { useStore } from "@/lib/store";
 
 const NAV = [
   { href: "/", label: "Inicio" },
@@ -16,8 +17,9 @@ const NAV = [
 
 export function SiteHeader() {
   const pathname = usePathname();
-  const { user } = useStore();
+  const { data: session } = useSession();
   const [open, setOpen] = useState(false);
+  const email = session?.user?.email;
 
   return (
     <header className="sticky top-0 z-40 border-b border-ink/10 bg-yellow">
@@ -42,11 +44,17 @@ export function SiteHeader() {
             );
           })}
         </nav>
-        <div className="hidden items-center gap-2 md:flex">
-          {user ? (
-            <Button href="/dashboard" variant="ink" size="sm">
-              Ir al panel
-            </Button>
+        <div className="hidden items-center gap-3 md:flex">
+          {email ? (
+            <>
+              <span className="max-w-[220px] truncate text-[13px] font-semibold text-ink/80">
+                {email}
+              </span>
+              <Button href="/dashboard" variant="ink" size="sm">
+                Ir al panel
+              </Button>
+              <SignOutButton className="text-[13px] font-semibold text-ink/70 hover:text-ink" />
+            </>
           ) : (
             <>
               <Link
@@ -88,20 +96,24 @@ export function SiteHeader() {
               </Link>
             ))}
           </nav>
-          <div className="mt-3 flex gap-2">
-            {user ? (
-              <Button href="/dashboard" variant="ink" className="flex-1">
-                Ir al panel
-              </Button>
-            ) : (
+          <div className="mt-3 flex flex-col gap-2">
+            {email ? (
               <>
+                <p className="truncate text-[13px] font-semibold">{email}</p>
+                <Button href="/dashboard" variant="ink">
+                  Ir al panel
+                </Button>
+                <SignOutButton className="text-[13px] font-semibold text-ink/70" />
+              </>
+            ) : (
+              <div className="flex gap-2">
                 <Button href="/login" variant="line" className="flex-1">
                   Iniciar sesión
                 </Button>
                 <Button href="/registro" variant="ink" className="flex-1">
                   Regístrate
                 </Button>
-              </>
+              </div>
             )}
           </div>
         </div>

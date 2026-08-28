@@ -11,12 +11,10 @@ export type TransferStatus =
   | "entregada"
   | "cancelada";
 
-export type User = {
-  id: string;
+export type Profile = {
   email: string;
-  name: string;
-  password: string;
-  country: CountryCode;
+  name?: string;
+  country?: CountryCode;
   phone?: string;
   phoneVerified: boolean;
   profileComplete: boolean;
@@ -50,7 +48,7 @@ export type Transfer = {
 };
 
 export type StoreState = {
-  user: User | null;
+  profile: Profile | null;
   accounts: DestinationAccount[];
   transfers: Transfer[];
 };

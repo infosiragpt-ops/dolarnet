@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Newsreader, Plus_Jakarta_Sans } from "next/font/google";
+import { AuthSessionProvider } from "@/components/auth/AuthSessionProvider";
 import { StoreProvider } from "@/lib/store";
 import { SITE_NAME, SITE_TAGLINE } from "@/lib/constants";
 import "./globals.css";
@@ -36,7 +37,9 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       className={`${jakarta.variable} ${newsreader.variable} h-full antialiased`}
     >
       <body className="min-h-full font-sans">
-        <StoreProvider>{children}</StoreProvider>
+        <AuthSessionProvider>
+          <StoreProvider>{children}</StoreProvider>
+        </AuthSessionProvider>
       </body>
     </html>
   );

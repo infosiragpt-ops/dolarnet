@@ -7,13 +7,19 @@ import { AppShell } from "@/components/layout/AppShell";
 import { Button } from "@/components/ui/Button";
 import { getCountry } from "@/lib/corridors";
 import { formatDate, formatMoney } from "@/lib/format";
+import { useSession } from "next-auth/react";
 import { useStore } from "@/lib/store";
 import { statusLabel } from "@/lib/status";
 
 export default function DashboardPage() {
-  const { user, transfers, accounts } = useStore();
+  const { data: session } = useSession();
+  const { profile, transfers, accounts } = useStore();
   const latest = transfers[0];
-  const verified = Boolean(user?.phoneVerified && user?.profileComplete);
+  const verified = Boolean(profile?.phoneVerified && profile?.profileComplete);
+  const firstName =
+    session?.user?.name?.split(" ")[0] ||
+    session?.user?.email?.split("@")[0] ||
+    "ahí";
 
   return (
     <AppShell>
@@ -23,7 +29,7 @@ export default function DashboardPage() {
             Panel
           </p>
           <h1 className="mt-2 font-display text-[40px] leading-none">
-            Hola, {user?.name.split(" ")[0]}
+            Hola, {firstName}
           </h1>
         </div>
         <Button href="/transferencia">Nueva transferencia</Button>

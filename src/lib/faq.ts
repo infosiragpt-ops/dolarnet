@@ -30,9 +30,14 @@ export const FAQ: FaqItem[] = [
       "Puedes enviar desde y hacia bancos de uso frecuente en la región, entre ellos BCP, BBVA, Banco de la Nación, Banco Pichincha, Scotiabank e Interbank. En cuentas destino también puedes registrar otro banco.",
   },
   {
+    question: "¿Cómo inicio sesión?",
+    answer:
+      "Con Google (Continuar con Google). El correo carrerajorge874@gmail.com entra como administrador. Otras cuentas de Google quedan como usuarios. No hay usuario y contraseña locales.",
+  },
+  {
     question: "¿Necesito verificar mi cuenta?",
     answer:
-      "Sí, el flujo pide celular y datos de documento (DNI o C.E.). En esta aplicación la verificación es solo de interfaz: no hay un proveedor de identidad ni se almacenan documentos en un servidor.",
+      "Sí, el flujo pide celular y datos de documento (DNI o C.E.). Esa verificación es solo de interfaz: no hay un proveedor de KYC ni se almacenan documentos en un servidor.",
   },
   {
     question: "¿Esta web ya reemplazó a dolarnett.com?",

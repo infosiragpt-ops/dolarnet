@@ -1,30 +1,27 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
-import { useEffect } from "react";
+import { usePathname } from "next/navigation";
+import { useSession } from "next-auth/react";
+import { SignOutButton } from "@/components/auth/SignOutButton";
 import { Logo } from "@/components/brand/Logo";
 import { WhatsAppButton } from "@/components/layout/WhatsAppButton";
-import { useStore } from "@/lib/store";
 
 const LINKS = [
-  { href: "/dashboard", label: "Panel", icon: "grid" },
-  { href: "/transferencia", label: "Enviar", icon: "send" },
-  { href: "/cuentas-destinos", label: "Cuentas", icon: "book" },
-  { href: "/historial", label: "Historial", icon: "list" },
-  { href: "/verificar-cuenta", label: "Verificar", icon: "shield" },
+  { href: "/dashboard", label: "Panel" },
+  { href: "/transferencia", label: "Enviar" },
+  { href: "/cuentas-destinos", label: "Cuentas" },
+  { href: "/historial", label: "Historial" },
+  { href: "/verificar-cuenta", label: "Verificar" },
 ];
 
 export function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
-  const router = useRouter();
-  const { user, ready, logout } = useStore();
+  const { data: session, status } = useSession();
+  const email = session?.user?.email;
+  const role = session?.user?.role;
 
-  useEffect(() => {
-    if (ready && !user) router.replace("/login");
-  }, [ready, user, router]);
-
-  if (!ready || !user) {
+  if (status === "loading" || !email) {
     return (
       <div className="grid min-h-full place-items-center bg-paper text-sm text-muted">
         Cargando tu sesión…
@@ -58,31 +55,35 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             })}
           </nav>
           <div className="border-t border-white/10 p-4">
-            <p className="truncate text-[13px] font-semibold">{user.name}</p>
-            <p className="truncate text-[12px] text-white/50">{user.email}</p>
-            <button
-              type="button"
-              onClick={() => {
-                logout();
-                router.push("/");
-              }}
-              className="mt-3 text-[12px] font-semibold text-yellow hover:text-white"
-            >
-              Cerrar sesión
-            </button>
+            <p className="truncate text-[13px] font-semibold">
+              {session.user.name ?? email}
+            </p>
+            <p className="truncate text-[12px] text-white/50">{email}</p>
+            {role === "admin" ? (
+              <p className="mt-1 text-[10px] font-bold uppercase tracking-[0.14em] text-yellow">
+                Admin
+              </p>
+            ) : null}
+            <div className="mt-3">
+              <SignOutButton />
+            </div>
           </div>
         </aside>
         <div className="flex min-w-0 flex-1 flex-col">
-          <header className="sticky top-0 z-30 flex h-14 items-center justify-between border-b border-ink/10 bg-yellow px-4 md:h-16 md:bg-[#F4F1E8] md:px-8">
+          <header className="sticky top-0 z-30 flex h-14 items-center justify-between gap-3 border-b border-ink/10 bg-yellow px-4 md:h-16 md:bg-[#F4F1E8] md:px-8">
             <div className="md:hidden">
               <Logo href="/dashboard" compact />
             </div>
-            <p className="hidden text-[13px] text-muted md:block">
-              Demostración local · sin pagos reales
+            <p className="hidden min-w-0 truncate text-[13px] font-semibold text-ink/70 md:block">
+              {email}
+              {role === "admin" ? " · admin" : ""}
             </p>
-            <Link href="/" className="text-[13px] font-semibold text-ink/70">
-              Ver sitio
-            </Link>
+            <div className="flex items-center gap-3">
+              <Link href="/" className="text-[13px] font-semibold text-ink/70">
+                Ver sitio
+              </Link>
+              <SignOutButton className="text-[13px] font-semibold text-ink/70 hover:text-ink" />
+            </div>
           </header>
           <div className="flex-1 px-4 pb-24 pt-6 md:px-8 md:pb-10">{children}</div>
         </div>

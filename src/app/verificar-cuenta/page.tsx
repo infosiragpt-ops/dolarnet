@@ -5,26 +5,28 @@ import { useState } from "react";
 import { AppShell } from "@/components/layout/AppShell";
 import { Button } from "@/components/ui/Button";
 import { Field, inputClass, selectClass } from "@/components/ui/Field";
+import { useSession } from "next-auth/react";
 import { DEMO_NOTICE } from "@/lib/constants";
 import { useStore } from "@/lib/store";
 import type { DocumentType } from "@/lib/types";
 
 export default function VerificarCuentaPage() {
-  const { user, updateUser } = useStore();
+  const { data: session } = useSession();
+  const { profile, updateProfile } = useStore();
   const router = useRouter();
   const [step, setStep] = useState<1 | 2 | 3>(1);
-  const [phone, setPhone] = useState(user?.phone ?? "");
+  const [phone, setPhone] = useState(profile?.phone ?? "");
   const [code, setCode] = useState("");
   const [documentType, setDocumentType] = useState<DocumentType>(
-    user?.documentType ?? "DNI",
+    profile?.documentType ?? "DNI",
   );
   const [documentNumber, setDocumentNumber] = useState(
-    user?.documentNumber ?? "",
+    profile?.documentNumber ?? "",
   );
-  const [name, setName] = useState(user?.name ?? "");
+  const [name, setName] = useState(profile?.name ?? session?.user?.name ?? "");
   const [error, setError] = useState<string | null>(null);
 
-  const complete = Boolean(user?.phoneVerified && user?.profileComplete);
+  const complete = Boolean(profile?.phoneVerified && profile?.profileComplete);
 
   function nextPhone() {
     if (phone.replace(/\D/g, "").length < 8) {
@@ -32,7 +34,7 @@ export default function VerificarCuentaPage() {
       return;
     }
     setError(null);
-    updateUser({ phone });
+    updateProfile({ phone });
     setStep(2);
   }
 
@@ -42,7 +44,7 @@ export default function VerificarCuentaPage() {
       return;
     }
     setError(null);
-    updateUser({ phoneVerified: true });
+    updateProfile({ phoneVerified: true });
     setStep(3);
   }
 
@@ -52,8 +54,8 @@ export default function VerificarCuentaPage() {
       setError("Ingresa un número de documento.");
       return;
     }
-    updateUser({
-      name: name.trim() || user?.name,
+    updateProfile({
+      name: name.trim() || profile?.name || session?.user?.name || undefined,
       documentType,
       documentNumber: documentNumber.trim(),
       profileComplete: true,
@@ -74,10 +76,13 @@ export default function VerificarCuentaPage() {
 
         {complete ? (
           <div className="mt-8 rounded-3xl border border-ink/10 bg-white p-6">
-            <p className="text-[15px] font-semibold">{user?.name}</p>
-            <p className="mt-1 text-[14px] text-muted">{user?.phone}</p>
+            <p className="text-[15px] font-semibold">
+              {profile?.name || session?.user?.name}
+            </p>
+            <p className="mt-1 text-[14px] text-muted">{session?.user?.email}</p>
+            <p className="mt-1 text-[14px] text-muted">{profile?.phone}</p>
             <p className="mt-1 text-[14px] text-muted">
-              {user?.documentType} {user?.documentNumber}
+              {profile?.documentType} {profile?.documentNumber}
             </p>
             <Button href="/dashboard" className="mt-6">
               Volver al panel

@@ -4,48 +4,32 @@ import {
   createContext,
   useCallback,
   useContext,
+  useEffect,
   useMemo,
   useSyncExternalStore,
 } from "react";
-import {
-  DEMO_ACCOUNTS,
-  DEMO_EMAIL,
-  DEMO_PASSWORD,
-  DEMO_TRANSFERS,
-  DEMO_USER,
-} from "@/lib/demo-data";
+import { useSession } from "next-auth/react";
+import { RESIDENCE_COOKIE } from "@/lib/auth-env";
+import type { CountryCode } from "@/lib/corridors";
+import { RESIDENCE_CODES } from "@/lib/corridors";
 import { readJson, uid, writeJson } from "@/lib/storage";
 import type {
   DestinationAccount,
+  Profile,
   StoreState,
   Transfer,
   TransferStatus,
-  User,
 } from "@/lib/types";
-import type { CountryCode } from "@/lib/corridors";
-
-const STORAGE_KEY = "dolarnett.demo.v1";
 
 const emptyState: StoreState = {
-  user: null,
+  profile: null,
   accounts: [],
   transfers: [],
 };
 
-type RegisterInput = {
-  country: CountryCode;
-  name: string;
-  email: string;
-  password: string;
-};
-
 type StoreContextValue = StoreState & {
   ready: boolean;
-  login: (email: string, password: string) => string | null;
-  loginDemo: () => void;
-  register: (input: RegisterInput) => string | null;
-  logout: () => void;
-  updateUser: (patch: Partial<User>) => void;
+  updateProfile: (patch: Partial<Profile>) => void;
   addAccount: (account: Omit<DestinationAccount, "id">) => DestinationAccount;
   removeAccount: (id: string) => void;
   addTransfer: (
@@ -56,42 +40,59 @@ type StoreContextValue = StoreState & {
 
 const StoreContext = createContext<StoreContextValue | null>(null);
 
-function seedDemo(): StoreState {
-  return {
-    user: DEMO_USER,
-    accounts: DEMO_ACCOUNTS,
-    transfers: DEMO_TRANSFERS,
-  };
+function storageKey(email: string) {
+  return `dolarnett.app.v2.${email.toLowerCase()}`;
 }
 
 let memory: StoreState = emptyState;
-let hydrated = false;
 const listeners = new Set<() => void>();
 
 function emit() {
   listeners.forEach((listener) => listener());
 }
 
-function hydrate() {
-  if (hydrated || typeof window === "undefined") return;
-  memory = readJson<StoreState>(STORAGE_KEY, emptyState);
-  hydrated = true;
+function readResidenceCookie(): CountryCode | undefined {
+  if (typeof document === "undefined") return undefined;
+  const match = document.cookie
+    .split("; ")
+    .find((row) => row.startsWith(`${RESIDENCE_COOKIE}=`));
+  const value = match?.split("=")[1];
+  return RESIDENCE_CODES.includes(value as CountryCode)
+    ? (value as CountryCode)
+    : undefined;
 }
 
-function setMemory(next: StoreState) {
+function loadForEmail(email: string): StoreState {
+  const stored = readJson<StoreState>(storageKey(email), emptyState);
+  const country = stored.profile?.country ?? readResidenceCookie();
+  return {
+    profile: {
+      email,
+      name: stored.profile?.name,
+      country,
+      phone: stored.profile?.phone,
+      phoneVerified: stored.profile?.phoneVerified ?? false,
+      profileComplete: stored.profile?.profileComplete ?? false,
+      documentType: stored.profile?.documentType,
+      documentNumber: stored.profile?.documentNumber,
+    },
+    accounts: stored.accounts ?? [],
+    transfers: stored.transfers ?? [],
+  };
+}
+
+function persist(email: string, next: StoreState) {
   memory = next;
-  writeJson(STORAGE_KEY, next);
+  writeJson(storageKey(email), next);
   emit();
 }
 
 function subscribe(listener: () => void) {
-  hydrate();
   listeners.add(listener);
   return () => listeners.delete(listener);
 }
 
 function getSnapshot() {
-  hydrate();
   return memory;
 }
 
@@ -100,74 +101,48 @@ function getServerSnapshot() {
 }
 
 export function StoreProvider({ children }: { children: React.ReactNode }) {
+  const { data: session, status } = useSession();
+  const email = session?.user?.email?.toLowerCase() ?? "";
+
+  useEffect(() => {
+    if (status === "authenticated" && email) {
+      memory = loadForEmail(email);
+      writeJson(storageKey(email), memory);
+      emit();
+      return;
+    }
+    if (status === "unauthenticated") {
+      memory = emptyState;
+      emit();
+    }
+  }, [status, email]);
+
   const state = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
-  const ready = useSyncExternalStore(
-    subscribe,
-    () => true,
-    () => false,
-  );
 
-  const login = useCallback((email: string, password: string) => {
-    const normalized = email.trim().toLowerCase();
-    if (normalized === DEMO_EMAIL && password === DEMO_PASSWORD) {
-      setMemory(seedDemo());
-      return null;
-    }
-    const current = readJson<StoreState>(STORAGE_KEY, emptyState);
-    if (
-      current.user &&
-      current.user.email === normalized &&
-      current.user.password === password
-    ) {
-      setMemory(current);
-      return null;
-    }
-    return "Correo o contraseña no coinciden. Puedes usar la cuenta de demostración.";
-  }, []);
-
-  const loginDemo = useCallback(() => {
-    setMemory(seedDemo());
-  }, []);
-
-  const register = useCallback((input: RegisterInput) => {
-    const email = input.email.trim().toLowerCase();
-    if (!email.includes("@")) return "Ingresa un correo válido.";
-    if (input.password.length < 6) {
-      return "La contraseña debe tener al menos 6 caracteres.";
-    }
-    const user: User = {
-      id: uid("user"),
-      email,
-      password: input.password,
-      name: input.name.trim(),
-      country: input.country,
-      phoneVerified: false,
-      profileComplete: false,
-    };
-    setMemory({ user, accounts: [], transfers: [] });
-    return null;
-  }, []);
-
-  const logout = useCallback(() => {
-    setMemory(emptyState);
-  }, []);
-
-  const updateUser = useCallback((patch: Partial<User>) => {
+  const updateProfile = useCallback((patch: Partial<Profile>) => {
     const current = getSnapshot();
-    if (!current.user) return;
-    setMemory({ ...current, user: { ...current.user, ...patch } });
+    if (!current.profile) return;
+    persist(current.profile.email, {
+      ...current,
+      profile: { ...current.profile, ...patch },
+    });
   }, []);
 
   const addAccount = useCallback((account: Omit<DestinationAccount, "id">) => {
     const created: DestinationAccount = { ...account, id: uid("acc") };
     const current = getSnapshot();
-    setMemory({ ...current, accounts: [created, ...current.accounts] });
+    if (!current.profile) return created;
+    persist(current.profile.email, {
+      ...current,
+      accounts: [created, ...current.accounts],
+    });
     return created;
   }, []);
 
   const removeAccount = useCallback((id: string) => {
     const current = getSnapshot();
-    setMemory({
+    if (!current.profile) return;
+    persist(current.profile.email, {
       ...current,
       accounts: current.accounts.filter((account) => account.id !== id),
     });
@@ -182,19 +157,25 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
         reference: `DN-${uid("").slice(-4).toUpperCase()}`,
       };
       const current = getSnapshot();
-      setMemory({ ...current, transfers: [created, ...current.transfers] });
+      if (current.profile) {
+        persist(current.profile.email, {
+          ...current,
+          transfers: [created, ...current.transfers],
+        });
+      }
       return created;
     },
     [],
   );
 
   const updateTransferStatus = useCallback(
-    (id: string, status: TransferStatus) => {
+    (id: string, statusValue: TransferStatus) => {
       const current = getSnapshot();
-      setMemory({
+      if (!current.profile) return;
+      persist(current.profile.email, {
         ...current,
         transfers: current.transfers.map((transfer) =>
-          transfer.id === id ? { ...transfer, status } : transfer,
+          transfer.id === id ? { ...transfer, status: statusValue } : transfer,
         ),
       });
     },
@@ -204,12 +185,8 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
   const value = useMemo<StoreContextValue>(
     () => ({
       ...state,
-      ready,
-      login,
-      loginDemo,
-      register,
-      logout,
-      updateUser,
+      ready: status !== "loading",
+      updateProfile,
       addAccount,
       removeAccount,
       addTransfer,
@@ -217,12 +194,8 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     }),
     [
       state,
-      ready,
-      login,
-      loginDemo,
-      register,
-      logout,
-      updateUser,
+      status,
+      updateProfile,
       addAccount,
       removeAccount,
       addTransfer,
