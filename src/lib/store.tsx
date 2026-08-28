@@ -4,9 +4,8 @@ import {
   createContext,
   useCallback,
   useContext,
-  useEffect,
   useMemo,
-  useState,
+  useSyncExternalStore,
 } from "react";
 import {
   DEMO_ACCOUNTS,
@@ -65,28 +64,53 @@ function seedDemo(): StoreState {
   };
 }
 
+let memory: StoreState = emptyState;
+let hydrated = false;
+const listeners = new Set<() => void>();
+
+function emit() {
+  listeners.forEach((listener) => listener());
+}
+
+function hydrate() {
+  if (hydrated || typeof window === "undefined") return;
+  memory = readJson<StoreState>(STORAGE_KEY, emptyState);
+  hydrated = true;
+}
+
+function setMemory(next: StoreState) {
+  memory = next;
+  writeJson(STORAGE_KEY, next);
+  emit();
+}
+
+function subscribe(listener: () => void) {
+  hydrate();
+  listeners.add(listener);
+  return () => listeners.delete(listener);
+}
+
+function getSnapshot() {
+  hydrate();
+  return memory;
+}
+
+function getServerSnapshot() {
+  return emptyState;
+}
+
 export function StoreProvider({ children }: { children: React.ReactNode }) {
-  const [state, setState] = useState<StoreState>(emptyState);
-  const [ready, setReady] = useState(false);
-
-  useEffect(() => {
-    setState(readJson<StoreState>(STORAGE_KEY, emptyState));
-    setReady(true);
-  }, []);
-
-  useEffect(() => {
-    if (!ready) return;
-    writeJson(STORAGE_KEY, state);
-  }, [ready, state]);
-
-  const persist = useCallback((updater: (prev: StoreState) => StoreState) => {
-    setState((prev) => updater(prev));
-  }, []);
+  const state = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
+  const ready = useSyncExternalStore(
+    subscribe,
+    () => true,
+    () => false,
+  );
 
   const login = useCallback((email: string, password: string) => {
     const normalized = email.trim().toLowerCase();
     if (normalized === DEMO_EMAIL && password === DEMO_PASSWORD) {
-      setState(seedDemo());
+      setMemory(seedDemo());
       return null;
     }
     const current = readJson<StoreState>(STORAGE_KEY, emptyState);
@@ -95,14 +119,14 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       current.user.email === normalized &&
       current.user.password === password
     ) {
-      setState(current);
+      setMemory(current);
       return null;
     }
     return "Correo o contraseña no coinciden. Puedes usar la cuenta de demostración.";
   }, []);
 
   const loginDemo = useCallback(() => {
-    setState(seedDemo());
+    setMemory(seedDemo());
   }, []);
 
   const register = useCallback((input: RegisterInput) => {
@@ -120,32 +144,34 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
       phoneVerified: false,
       profileComplete: false,
     };
-    setState({ user, accounts: [], transfers: [] });
+    setMemory({ user, accounts: [], transfers: [] });
     return null;
   }, []);
 
   const logout = useCallback(() => {
-    setState(emptyState);
+    setMemory(emptyState);
   }, []);
 
   const updateUser = useCallback((patch: Partial<User>) => {
-    persist((prev) =>
-      prev.user ? { ...prev, user: { ...prev.user, ...patch } } : prev,
-    );
-  }, [persist]);
+    const current = getSnapshot();
+    if (!current.user) return;
+    setMemory({ ...current, user: { ...current.user, ...patch } });
+  }, []);
 
   const addAccount = useCallback((account: Omit<DestinationAccount, "id">) => {
     const created: DestinationAccount = { ...account, id: uid("acc") };
-    persist((prev) => ({ ...prev, accounts: [created, ...prev.accounts] }));
+    const current = getSnapshot();
+    setMemory({ ...current, accounts: [created, ...current.accounts] });
     return created;
-  }, [persist]);
+  }, []);
 
   const removeAccount = useCallback((id: string) => {
-    persist((prev) => ({
-      ...prev,
-      accounts: prev.accounts.filter((account) => account.id !== id),
-    }));
-  }, [persist]);
+    const current = getSnapshot();
+    setMemory({
+      ...current,
+      accounts: current.accounts.filter((account) => account.id !== id),
+    });
+  }, []);
 
   const addTransfer = useCallback(
     (transfer: Omit<Transfer, "id" | "createdAt" | "reference">) => {
@@ -155,22 +181,24 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
         createdAt: new Date().toISOString(),
         reference: `DN-${uid("").slice(-4).toUpperCase()}`,
       };
-      persist((prev) => ({ ...prev, transfers: [created, ...prev.transfers] }));
+      const current = getSnapshot();
+      setMemory({ ...current, transfers: [created, ...current.transfers] });
       return created;
     },
-    [persist],
+    [],
   );
 
   const updateTransferStatus = useCallback(
     (id: string, status: TransferStatus) => {
-      persist((prev) => ({
-        ...prev,
-        transfers: prev.transfers.map((transfer) =>
+      const current = getSnapshot();
+      setMemory({
+        ...current,
+        transfers: current.transfers.map((transfer) =>
           transfer.id === id ? { ...transfer, status } : transfer,
         ),
-      }));
+      });
     },
-    [persist],
+    [],
   );
 
   const value = useMemo<StoreContextValue>(
