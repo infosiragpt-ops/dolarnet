@@ -2,7 +2,7 @@ export function authErrorMessage(code?: string) {
   switch (code) {
     case "config":
     case "Configuration":
-      return "Google OAuth no está configurado. Define AUTH_SECRET, AUTH_GOOGLE_ID y AUTH_GOOGLE_SECRET (o GOOGLE_CLIENT_ID / GOOGLE_CLIENT_SECRET) en .env.local.";
+      return "Google OAuth no está configurado. Define AUTH_SECRET, AUTH_GOOGLE_ID, AUTH_GOOGLE_SECRET y AUTH_URL en .env.local.";
     case "AccessDenied":
       return "Google rechazó el acceso. Vuelve a intentarlo o usa otra cuenta.";
     case "OAuthCallback":

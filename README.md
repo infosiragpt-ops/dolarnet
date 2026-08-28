@@ -35,25 +35,34 @@ npm start
 
 El acceso es **Google OAuth**. No hay usuario/contraseña local ni cuenta de demostración.
 
-Copia `.env.example` a `.env.local` (nunca subas secretos):
+Copia `.env.example` a `.env.local` y rellena solo ahí (nunca subas secretos ni el Client Secret):
 
-```bash
-AUTH_SECRET=            # npx auth secret
-# NEXTAUTH_SECRET=      # alias aceptado
-
+```
+AUTH_SECRET=
 AUTH_GOOGLE_ID=
 AUTH_GOOGLE_SECRET=
-# GOOGLE_CLIENT_ID=     # alias aceptado
-# GOOGLE_CLIENT_SECRET=
-
-AUTH_URL=http://localhost:3000
-# NEXTAUTH_URL=http://localhost:3000
+AUTH_URL=
 ```
 
-En Google Cloud Console registra estos callback URIs:
+Nombres que usa Auth.js (sin alias):
 
-- `http://localhost:3000/api/auth/callback/google`
-- `https://dolarnett.com/api/auth/callback/google` (cuando despliegues)
+| Variable | Uso |
+| --- | --- |
+| `AUTH_SECRET` | Firma de sesión. Genera uno con `npx auth secret`. |
+| `AUTH_GOOGLE_ID` | Client ID de Google (Web application). |
+| `AUTH_GOOGLE_SECRET` | Client Secret. Solo en `.env.local` o el secret manager del host. |
+| `AUTH_URL` | URL pública de la app. En local: `http://localhost:3000`. |
+
+El cliente OAuth está en el proyecto de Google Cloud **SIRAGPT** (`gen-lang-client-0149080720`). Consentimiento: nombre de app **Dolarnett**, External / testing. Usuario de prueba: `carrerajorge874@gmail.com`.
+
+Redirect y origen ya registrados para desarrollo:
+
+- JavaScript origin: `http://localhost:3000`
+- Redirect: `http://localhost:3000/api/auth/callback/google`
+
+Al desplegar, agrega el origen y el callback de producción (`https://<host>/api/auth/callback/google`).
+
+`npm run build` no requiere estas variables: Auth.js usa un placeholder interno solo para compilar. Sin `.env.local` completo no hay inicio de sesión real.
 
 La sesión es JWT. El correo `carrerajorge874@gmail.com` queda con `role=admin`. Cualquier otra cuenta de Google entra como usuario.
 

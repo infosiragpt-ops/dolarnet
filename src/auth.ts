@@ -8,6 +8,14 @@ import {
   type UserRole,
 } from "@/lib/auth-env";
 
+/**
+ * Auth.js env names (see .env.example):
+ * AUTH_SECRET, AUTH_GOOGLE_ID, AUTH_GOOGLE_SECRET, AUTH_URL
+ *
+ * AUTH_URL is read by Auth.js from the environment. Placeholders keep the
+ * Google provider registered so /api/auth/callback/google exists at build
+ * time even when the secret is absent.
+ */
 export const { handlers, auth, signIn, signOut } = NextAuth({
   trustHost: true,
   secret: authSecret(),
