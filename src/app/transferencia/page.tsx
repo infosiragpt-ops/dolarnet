@@ -1,15 +1,20 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { Flag } from "@/components/brand/Flag";
+import { DestinationCombobox } from "@/components/calculator/DestinationCombobox";
 import { AppShell } from "@/components/layout/AppShell";
 import { Button } from "@/components/ui/Button";
 import { Field, inputClass, selectClass } from "@/components/ui/Field";
 import { Stamp } from "@/components/ui/Stamp";
-import { BANKS_BY_COUNTRY, DESTINATION_CODES, getCountry, type CountryCode } from "@/lib/corridors";
+import { banksForCountry, getCountry, type CountryCode } from "@/lib/corridors";
 import { DOLARNETT_DEPOSIT_ACCOUNTS } from "@/lib/demo-data";
 import { formatDateTime, formatMoney, formatNumber, formatRate } from "@/lib/format";
-import { quoteFromSoles, RATE_DISCLAIMER } from "@/lib/rates";
+import {
+  missingRateMessage,
+  quoteFromSoles,
+  RATE_DISCLAIMER,
+  rateFor,
+} from "@/lib/rates";
 import { useRates } from "@/lib/use-rates";
 import { useStore } from "@/lib/store";
 import type { AccountType } from "@/lib/types";
@@ -22,13 +27,13 @@ export default function TransferenciaPage() {
   const [destination, setDestination] = useState<CountryCode>("EC");
   const [accountId, setAccountId] = useState<string>("");
   const [holder, setHolder] = useState("");
-  const [bank, setBank] = useState(BANKS_BY_COUNTRY.EC[0]);
+  const [bank, setBank] = useState(banksForCountry("EC")[0]);
   const [number, setNumber] = useState("");
   const [type, setType] = useState<AccountType>("ahorros");
   const [doneId, setDoneId] = useState<string | null>(null);
 
-  const liveRate =
-    rates.status === "ready" ? rates.data.rates[destination]?.rate : 0;
+  const live = rates.status === "ready" ? rateFor(rates.data, destination) : null;
+  const liveRate = live?.rate ?? 0;
   const commission =
     rates.status === "ready" ? rates.data.commissionPen : 0;
   const quote = useMemo(
@@ -41,7 +46,8 @@ export default function TransferenciaPage() {
       ),
     [amount, destination, liveRate, commission],
   );
-  const quoteReady = rates.status === "ready" && liveRate > 0;
+  const quoteReady = Boolean(live);
+  const missingCurrency = rates.status === "ready" && !live;
   const destAccounts = accounts.filter((a) => a.country === destination);
   const selected = accounts.find((a) => a.id === accountId);
 
@@ -112,26 +118,15 @@ export default function TransferenciaPage() {
             <p className="text-[13px] font-semibold text-muted">País destino</p>
             <Stamp>Referencia</Stamp>
           </div>
-          <div className="mt-3 flex flex-wrap gap-2">
-            {DESTINATION_CODES.map((code) => (
-              <button
-                key={code}
-                type="button"
-                onClick={() => {
-                  setDestination(code);
-                  setAccountId("");
-                  setBank(BANKS_BY_COUNTRY[code][0]);
-                }}
-                className={`inline-flex items-center gap-2 rounded-full border px-3 py-2 text-[13px] font-semibold ${
-                  destination === code
-                    ? "border-ink bg-ink text-white"
-                    : "border-ink/10"
-                }`}
-              >
-                <Flag code={code} size={18} />
-                {getCountry(code).name}
-              </button>
-            ))}
+          <div className="mt-3">
+            <DestinationCombobox
+              value={destination}
+              onChange={(code) => {
+                setDestination(code);
+                setAccountId("");
+                setBank(banksForCountry(code)[0]);
+              }}
+            />
           </div>
           <div className="mt-5">
             <Field label="Envías (soles)">
@@ -153,6 +148,15 @@ export default function TransferenciaPage() {
                 Reintentar
               </Button>
             </div>
+          ) : missingCurrency ? (
+            <div className="mt-5 rounded-2xl border border-[#9B1C1C]/20 bg-[#9B1C1C]/5 px-4 py-4">
+              <p className="text-[14px] font-semibold text-[#9B1C1C]">
+                No hay tipo de cambio de referencia de mercado
+              </p>
+              <p className="mt-1 text-[13px] text-muted">
+                {missingRateMessage(destination)}
+              </p>
+            </div>
           ) : (
             <dl className="mt-5 space-y-2 text-[14px]">
               <div className="flex justify-between">
@@ -164,7 +168,7 @@ export default function TransferenciaPage() {
                 </dd>
               </div>
               <div className="flex justify-between">
-                <dt className="text-muted">Tipo de cambio</dt>
+                <dt className="text-muted">Tipo de cambio de referencia de mercado</dt>
                 <dd className="font-semibold">
                   {quoteReady
                     ? `1 PEN = ${formatRate(quote.rate)} ${quote.currency}`
@@ -257,7 +261,7 @@ export default function TransferenciaPage() {
                   value={bank}
                   onChange={(e) => setBank(e.target.value)}
                 >
-                  {BANKS_BY_COUNTRY[destination].map((item) => (
+                  {banksForCountry(destination).map((item) => (
                     <option key={item}>{item}</option>
                   ))}
                 </select>

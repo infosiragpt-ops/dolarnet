@@ -1,9 +1,5 @@
-import {
-  COUNTRY_BY_CODE,
-  FX_CURRENCY_BY_COUNTRY,
-  type CountryCode,
-  type QuoteCurrency,
-} from "@/lib/corridors";
+import { getCountry, type CountryCode } from "./corridors";
+import { currencyFractionDigits } from "./currencies";
 
 export const RATE_DISCLAIMER =
   "Tipo de cambio de referencia de mercado. No es una liquidación bancaria ni una oferta vinculante.";
@@ -11,7 +7,7 @@ export const RATE_DISCLAIMER =
 export const CACHE_SECONDS = 12 * 60;
 
 export type CorridorRate = {
-  currency: QuoteCurrency;
+  currency: string;
   rate: number;
 };
 
@@ -21,7 +17,7 @@ export type RatesPayload = {
   updatedAtUnix: number;
   source: "open" | "keyed";
   commissionPen: number;
-  rates: Record<CountryCode, CorridorRate>;
+  rates: Record<string, CorridorRate>;
 };
 
 export type Quote = {
@@ -31,7 +27,7 @@ export type Quote = {
   receiveAmount: number;
   commission: number;
   totalToTransfer: number;
-  currency: QuoteCurrency;
+  currency: string;
   currencyName: string;
 };
 
@@ -41,12 +37,11 @@ export function quoteFromSoles(
   rate: number,
   commissionPen: number,
 ): Quote {
-  const country = COUNTRY_BY_CODE[destination];
+  const country = getCountry(destination);
   const safeAmount = Number.isFinite(sendAmount) && sendAmount > 0 ? sendAmount : 0;
   const safeRate = Number.isFinite(rate) && rate > 0 ? rate : 0;
   const commission = safeAmount > 0 ? commissionPen : 0;
-  const decimals =
-    country.currency === "COP" || country.currency === "CLP" ? 0 : 2;
+  const decimals = currencyFractionDigits(country.currency);
 
   return {
     sendAmount: safeAmount,
@@ -63,9 +58,18 @@ export function quoteFromSoles(
 export function rateFor(
   payload: RatesPayload,
   destination: CountryCode,
-): CorridorRate {
-  return payload.rates[destination] ?? {
-    currency: FX_CURRENCY_BY_COUNTRY[destination],
-    rate: 0,
-  };
+): CorridorRate | null {
+  const country = getCountry(destination);
+  if (!country.currency) return null;
+  const entry = payload.rates[country.currency];
+  if (!entry || !(entry.rate > 0) || entry.currency !== country.currency) {
+    return null;
+  }
+  return entry;
+}
+
+export function missingRateMessage(destination: CountryCode): string {
+  const country = getCountry(destination);
+  const currency = country.currency || "esta moneda";
+  return `No hay tipo de cambio de referencia de mercado para ${currency} (${country.name}). El proveedor no publicó esta moneda en la última actualización.`;
 }

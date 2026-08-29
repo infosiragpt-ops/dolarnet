@@ -1,11 +1,17 @@
 "use client";
 
-import { Flag } from "@/components/brand/Flag";
+import { DestinationCombobox } from "@/components/calculator/DestinationCombobox";
 import { Button } from "@/components/ui/Button";
 import { Stamp } from "@/components/ui/Stamp";
-import { DESTINATION_CODES, getCountry, type CountryCode } from "@/lib/corridors";
+import { getCountry, type CountryCode } from "@/lib/corridors";
+import { currencyFractionDigits } from "@/lib/currencies";
 import { formatDateTime, formatMoney, formatNumber, formatRate } from "@/lib/format";
-import { quoteFromSoles, RATE_DISCLAIMER } from "@/lib/rates";
+import {
+  missingRateMessage,
+  quoteFromSoles,
+  RATE_DISCLAIMER,
+  rateFor,
+} from "@/lib/rates";
 import { useRates } from "@/lib/use-rates";
 import { useState } from "react";
 
@@ -25,12 +31,12 @@ export function QuoteCalculator({
   const rates = useRates();
   const sendAmount = Number(amount.replace(",", ".")) || 0;
   const dest = getCountry(destination);
-  const liveRate =
-    rates.status === "ready" ? rates.data.rates[destination]?.rate : 0;
-  const commission =
-    rates.status === "ready" ? rates.data.commissionPen : 0;
+  const live = rates.status === "ready" ? rateFor(rates.data, destination) : null;
+  const liveRate = live?.rate ?? 0;
+  const commission = rates.status === "ready" ? rates.data.commissionPen : 0;
   const quote = quoteFromSoles(sendAmount, destination, liveRate, commission);
-  const ready = rates.status === "ready" && liveRate > 0;
+  const ready = Boolean(live);
+  const missingCurrency = rates.status === "ready" && !live;
 
   return (
     <section
@@ -55,26 +61,8 @@ export function QuoteCalculator({
         <p className="text-[12px] font-semibold uppercase tracking-[0.12em] text-ink/50">
           Destino
         </p>
-        <div className="mt-2 flex gap-2 overflow-x-auto pb-1">
-          {DESTINATION_CODES.map((code) => {
-            const country = getCountry(code);
-            const selected = code === destination;
-            return (
-              <button
-                key={code}
-                type="button"
-                onClick={() => setDestination(code)}
-                className={`flex shrink-0 items-center gap-2 rounded-full border px-3 py-2 text-[13px] font-semibold transition ${
-                  selected
-                    ? "border-ink bg-ink text-white"
-                    : "border-ink/10 bg-paper-2 text-ink hover:border-ink/25"
-                }`}
-              >
-                <Flag code={code} size={18} />
-                {country.name}
-              </button>
-            );
-          })}
+        <div className="mt-2">
+          <DestinationCombobox value={destination} onChange={setDestination} />
         </div>
       </div>
 
@@ -87,6 +75,15 @@ export function QuoteCalculator({
           <Button type="button" variant="line" className="mt-3" onClick={rates.reload}>
             Reintentar
           </Button>
+        </div>
+      ) : missingCurrency ? (
+        <div className="relative mt-5 rounded-2xl border border-[#9B1C1C]/20 bg-[#9B1C1C]/5 px-4 py-4">
+          <p className="text-[14px] font-semibold text-[#9B1C1C]">
+            No hay tipo de cambio de referencia de mercado
+          </p>
+          <p className="mt-1 text-[13px] leading-6 text-muted">
+            {missingRateMessage(destination)}
+          </p>
         </div>
       ) : (
         <>
@@ -132,7 +129,7 @@ export function QuoteCalculator({
                 {ready
                   ? formatNumber(
                       quote.receiveAmount,
-                      dest.currency === "COP" || dest.currency === "CLP" ? 0 : 2,
+                      currencyFractionDigits(dest.currency),
                     )
                   : "—"}
               </p>
@@ -141,7 +138,7 @@ export function QuoteCalculator({
 
           <dl className="relative mt-5 divide-y divide-ink/8 rounded-2xl border border-ink/10 bg-paper-2">
             <Row
-              label="Tipo de cambio"
+              label="Tipo de cambio de referencia de mercado"
               value={
                 ready
                   ? `1 PEN = ${formatRate(quote.rate)} ${dest.currency}`

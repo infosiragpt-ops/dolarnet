@@ -1,12 +1,12 @@
 import type { Metadata } from "next";
 import { MarketingShell } from "@/components/layout/MarketingShell";
-import { COUNTRIES } from "@/lib/corridors";
+import { getCountry, POPULAR_DESTINATION_CODES } from "@/lib/corridors";
 import { WHATSAPP_URL } from "@/lib/constants";
 
 export const metadata: Metadata = {
   title: "Nosotros",
   description:
-    "Dolarnett es un servicio peruano de envíos internacionales de dinero hacia Ecuador, Chile, Colombia, México y Perú.",
+    "Dolarnett es un servicio peruano de envíos internacionales de dinero desde soles hacia cualquier país del mundo.",
 };
 
 export default function NosotrosPage() {
@@ -20,10 +20,9 @@ export default function NosotrosPage() {
           Envíos internacionales de dinero, desde Perú.
         </h1>
         <p className="mt-6 text-[18px] leading-8 text-ink/80">
-          Dolarnett existe para mover dinero entre personas en Ecuador, Chile,
-          Colombia, México y Perú, con una cotización que se entiende de un
-          vistazo: cuánto envías en soles, cuánto llega y cuánto pagas de
-          comisión.
+          Dolarnett existe para mover dinero desde Perú hacia cualquier país,
+          con una cotización que se entiende de un vistazo: cuánto envías en
+          soles, cuánto llega y cuánto pagas de comisión.
         </p>
         <p className="mt-5 text-[16px] leading-8 text-muted">
           El sitio público actual vive en WordPress y se siente a medias. Esta
@@ -40,17 +39,26 @@ export default function NosotrosPage() {
           pedimos que cambies de app para cada corredor.
         </p>
         <ul className="mt-6 grid gap-2 sm:grid-cols-2">
-          {COUNTRIES.map((country) => (
-            <li
-              key={country.code}
-              className="rounded-2xl border border-ink/10 bg-white px-4 py-3 text-[14px] font-semibold"
-            >
-              {country.name}
-              <span className="ml-2 font-normal text-muted">
-                {country.currencyName}
-              </span>
-            </li>
-          ))}
+          {POPULAR_DESTINATION_CODES.map((code) => {
+            const country = getCountry(code);
+            return (
+              <li
+                key={country.code}
+                className="rounded-2xl border border-ink/10 bg-white px-4 py-3 text-[14px] font-semibold"
+              >
+                {country.name}
+                <span className="ml-2 font-normal text-muted">
+                  {country.currency} · {country.currencyName}
+                </span>
+              </li>
+            );
+          })}
+          <li className="rounded-2xl border border-dashed border-ink/15 bg-paper-2 px-4 py-3 text-[14px] font-semibold">
+            Cualquier otro país
+            <span className="ml-2 font-normal text-muted">
+              búscalo en el cotizador
+            </span>
+          </li>
         </ul>
 
         <h2 className="mt-12 font-display text-[32px]">Lo que no afirmamos</h2>

@@ -17,20 +17,20 @@ export const POSTS: BlogPost[] = [
     readingMinutes: 5,
     body: [
       "Una cotización de envío no es un solo número. En Dolarnett mostramos el tipo de cambio de referencia, la comisión (si hay) y el monto total que tendrías que transferir a nuestras cuentas.",
-      "El tipo de cambio convierte soles peruanos a la moneda del corredor: CLP, COP, MXN o USD (Ecuador y Perú). Lo tomamos en vivo de ExchangeRate-API y lo etiquetamos como referencia de mercado, no como el monto exacto que un banco acreditará.",
+      "El tipo de cambio convierte soles peruanos a la moneda del país destino (yen, dólar, euro, peso u otra ISO 4217). Lo tomamos en vivo de ExchangeRate-API y lo etiquetamos como tipo de cambio de referencia de mercado, no como el monto exacto que un banco acreditará. Si el proveedor no publica esa moneda, mostramos error y no inventamos una cifra.",
       "La comisión es configurable (por defecto 0). El monto total es lo que enviarías a Dolarnett: el monto cotizado más esa comisión. El destinatario recibe el monto cotizado convertido.",
       "Antes de mover dinero, confirma la cotización vigente, el banco destino y el titular de la cuenta.",
     ],
   },
   {
     slug: "corredores-andinos-y-mexico",
-    title: "Corredores que cubrimos: Ecuador, Chile, Colombia, México y Perú",
+    title: "Destinos: de los corredores andinos a cualquier país",
     excerpt:
-      "Dolarnett está pensado para envíos entre estos cinco países. Aquí resumimos monedas, bancos frecuentes y lo que debes tener a mano.",
+      "Dolarnett cotiza envíos desde soles hacia el mundo. Aquí resumimos monedas frecuentes, bancos de la región y lo que debes tener a mano.",
     date: "2026-08-10",
     readingMinutes: 6,
     body: [
-      "Dolarnett nace en Perú y opera corredores hacia Ecuador, Chile, Colombia, México y el propio Perú. Recibes CLP en Chile, COP en Colombia, MXN en México y USD en Ecuador y Perú.",
+      "Dolarnett nace en Perú. Los atajos más usados siguen siendo Ecuador, Chile, Colombia, México, Perú, Estados Unidos y España, pero el cotizador incluye el listado ISO de países. Recibes la moneda local de destino — o USD en países que la usan de forma oficial, como Ecuador, El Salvador y Panamá.",
       "El flujo es el mismo en todos los corredores. Primero cotizas en soles. Luego eliges o cargas una cuenta destino — banco, titular y número. Después transfieres el total a una cuenta de Dolarnett y esperas la acreditación en el país de destino.",
       "Los bancos que mostramos en la portada (BCP, BBVA, Banco de la Nación, Banco Pichincha, Scotiabank e Interbank) son los que el producto actual menciona como opciones frecuentes. No son una lista cerrada ni una alianza publicitada; en el panel puedes registrar otro banco si lo necesitas.",
       "No inventamos plazos de entrega universales. El tiempo depende de que la transferencia a Dolarnett se acredite y de los horarios del banco destino. Si tienes una operación en curso, el canal más directo hoy es WhatsApp.",

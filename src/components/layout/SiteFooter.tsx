@@ -18,9 +18,9 @@ export function SiteFooter() {
         <div className="md:col-span-5">
           <Logo onDark href="/" />
           <p className="mt-5 max-w-sm text-[15px] leading-7 text-white/70">
-            Envíos internacionales de dinero entre Perú, Ecuador, Chile,
-            Colombia y México. Cotiza, transfiere a Dolarnett y recibe en la
-            cuenta destino.
+            Envíos internacionales de dinero desde Perú hacia cualquier país.
+            Cotiza en soles, transfiere a Dolarnett y recibe en la cuenta
+            destino.
           </p>
         </div>
         <div className="md:col-span-3">

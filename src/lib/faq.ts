@@ -7,7 +7,7 @@ export const FAQ: FaqItem[] = [
   {
     question: "¿A qué países puedo enviar?",
     answer:
-      "Los corredores son Chile (CLP), Colombia (COP), México (MXN), Ecuador (USD) y Perú (USD). Cotizas en soles peruanos.",
+      "Puedes cotizar un envío desde soles peruanos hacia cualquier país. El cotizador busca por nombre, código ISO o moneda y usa el tipo de cambio de referencia de mercado publicado para esa moneda.",
   },
   {
     question: "¿Los tipos de cambio del calculador son en vivo?",

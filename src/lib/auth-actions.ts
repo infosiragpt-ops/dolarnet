@@ -5,13 +5,11 @@ import { redirect } from "next/navigation";
 import { signIn, signOut } from "@/auth";
 import { isGoogleConfigured, RESIDENCE_COOKIE } from "@/lib/auth-env";
 import type { CountryCode } from "@/lib/corridors";
-import { RESIDENCE_CODES } from "@/lib/corridors";
+import { isResidenceCode } from "@/lib/corridors";
 
 function asCountry(value: FormDataEntryValue | null): CountryCode | null {
   const code = String(value ?? "");
-  return RESIDENCE_CODES.includes(code as CountryCode)
-    ? (code as CountryCode)
-    : null;
+  return isResidenceCode(code) ? code : null;
 }
 
 export async function continueWithGoogle(formData?: FormData) {
