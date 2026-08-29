@@ -1,3 +1,5 @@
+import { currencyFractionDigits } from "./currencies";
+
 const locale = "es-PE";
 
 export function formatMoney(
@@ -5,14 +7,18 @@ export function formatMoney(
   currency: string,
   options?: { compact?: boolean },
 ): string {
-  const fractionDigits = currency === "COP" || currency === "CLP" ? 0 : 2;
-  return new Intl.NumberFormat(locale, {
-    style: "currency",
-    currency,
-    currencyDisplay: "narrowSymbol",
-    minimumFractionDigits: options?.compact ? 0 : fractionDigits,
-    maximumFractionDigits: fractionDigits,
-  }).format(amount);
+  const fractionDigits = currencyFractionDigits(currency);
+  try {
+    return new Intl.NumberFormat(locale, {
+      style: "currency",
+      currency,
+      currencyDisplay: "narrowSymbol",
+      minimumFractionDigits: options?.compact ? 0 : fractionDigits,
+      maximumFractionDigits: fractionDigits,
+    }).format(amount);
+  } catch {
+    return `${formatNumber(amount, fractionDigits)} ${currency}`;
+  }
 }
 
 export function formatNumber(amount: number, fractionDigits = 2): string {

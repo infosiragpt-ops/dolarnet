@@ -1,9 +1,4 @@
 import { unstable_cache } from "next/cache";
-import {
-  DESTINATION_CODES,
-  FX_CURRENCY_BY_COUNTRY,
-  type CountryCode,
-} from "@/lib/corridors";
 import { CACHE_SECONDS, type RatesPayload } from "@/lib/rates";
 
 type UpstreamBody = {
@@ -43,7 +38,7 @@ function asPositiveRate(value: unknown) {
     : null;
 }
 
-async function fetchLiveRates(): Promise<RatesPayload> {
+async function fetchLiveRates(): Promise<Omit<RatesPayload, "commissionPen">> {
   const { url, source } = feedUrl();
   const response = await fetch(url, {
     cache: "no-store",
@@ -65,14 +60,16 @@ async function fetchLiveRates(): Promise<RatesPayload> {
     throw new Error("El proveedor de FX no envió una tabla de tipos de cambio.");
   }
 
-  const rates = {} as RatesPayload["rates"];
-  for (const code of DESTINATION_CODES) {
-    const currency = FX_CURRENCY_BY_COUNTRY[code as CountryCode];
-    const rate = asPositiveRate(table[currency]);
-    if (!rate) {
-      throw new Error(`Falta el tipo ${currency} en la respuesta de FX.`);
-    }
-    rates[code] = { currency, rate };
+  const rates: RatesPayload["rates"] = {};
+  for (const [code, value] of Object.entries(table)) {
+    if (!/^[A-Z]{3}$/.test(code)) continue;
+    const rate = asPositiveRate(value);
+    if (!rate) continue;
+    rates[code] = { currency: code, rate };
+  }
+
+  if (Object.keys(rates).length === 0) {
+    throw new Error("El proveedor de FX no envió monedas utilizables.");
   }
 
   const updatedAtUnix = body.time_last_update_unix;
@@ -85,7 +82,6 @@ async function fetchLiveRates(): Promise<RatesPayload> {
     updatedAt: new Date(updatedAtUnix * 1000).toISOString(),
     updatedAtUnix,
     source,
-    commissionPen: 0,
     rates,
   };
 }

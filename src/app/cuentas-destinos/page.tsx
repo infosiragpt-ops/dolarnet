@@ -1,16 +1,12 @@
 "use client";
 
 import { useState } from "react";
+import { DestinationCombobox } from "@/components/calculator/DestinationCombobox";
 import { Flag } from "@/components/brand/Flag";
 import { AppShell } from "@/components/layout/AppShell";
 import { Button } from "@/components/ui/Button";
 import { Field, inputClass, selectClass } from "@/components/ui/Field";
-import {
-  BANKS_BY_COUNTRY,
-  COUNTRIES,
-  getCountry,
-  type CountryCode,
-} from "@/lib/corridors";
+import { banksForCountry, getCountry, type CountryCode } from "@/lib/corridors";
 import { useStore } from "@/lib/store";
 import type { AccountType } from "@/lib/types";
 
@@ -18,7 +14,7 @@ export default function CuentasDestinosPage() {
   const { accounts, addAccount, removeAccount } = useStore();
   const [open, setOpen] = useState(false);
   const [country, setCountry] = useState<CountryCode>("EC");
-  const [bank, setBank] = useState(BANKS_BY_COUNTRY.EC[0]);
+  const [bank, setBank] = useState(banksForCountry("EC")[0]);
   const [holder, setHolder] = useState("");
   const [number, setNumber] = useState("");
   const [type, setType] = useState<AccountType>("ahorros");
@@ -52,30 +48,25 @@ export default function CuentasDestinosPage() {
           onSubmit={onAdd}
           className="mt-6 grid max-w-2xl gap-3 rounded-[28px] border border-ink/10 bg-white p-6 sm:grid-cols-2"
         >
-          <Field label="País">
-            <select
-              className={selectClass}
+          <div className="sm:col-span-2">
+            <p className="mb-1.5 text-[12px] font-semibold uppercase tracking-[0.12em] text-ink/55">
+              País
+            </p>
+            <DestinationCombobox
               value={country}
-              onChange={(e) => {
-                const next = e.target.value as CountryCode;
+              onChange={(next) => {
                 setCountry(next);
-                setBank(BANKS_BY_COUNTRY[next][0]);
+                setBank(banksForCountry(next)[0]);
               }}
-            >
-              {COUNTRIES.map((item) => (
-                <option key={item.code} value={item.code}>
-                  {item.name}
-                </option>
-              ))}
-            </select>
-          </Field>
+            />
+          </div>
           <Field label="Banco">
             <select
               className={selectClass}
               value={bank}
               onChange={(e) => setBank(e.target.value)}
             >
-              {BANKS_BY_COUNTRY[country].map((item) => (
+              {banksForCountry(country).map((item) => (
                 <option key={item}>{item}</option>
               ))}
             </select>

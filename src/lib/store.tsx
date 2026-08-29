@@ -11,7 +11,7 @@ import {
 import { useSession } from "next-auth/react";
 import { RESIDENCE_COOKIE } from "@/lib/auth-env";
 import type { CountryCode } from "@/lib/corridors";
-import { RESIDENCE_CODES } from "@/lib/corridors";
+import { isResidenceCode } from "@/lib/corridors";
 import { readJson, uid, writeJson } from "@/lib/storage";
 import type {
   DestinationAccount,
@@ -57,9 +57,7 @@ function readResidenceCookie(): CountryCode | undefined {
     .split("; ")
     .find((row) => row.startsWith(`${RESIDENCE_COOKIE}=`));
   const value = match?.split("=")[1];
-  return RESIDENCE_CODES.includes(value as CountryCode)
-    ? (value as CountryCode)
-    : undefined;
+  return value && isResidenceCode(value) ? value : undefined;
 }
 
 function loadForEmail(email: string): StoreState {

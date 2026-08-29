@@ -1,74 +1,34 @@
-export type CountryCode = "CL" | "CO" | "EC" | "MX" | "PE";
+import {
+  COUNTRIES,
+  COUNTRY_BY_CODE,
+  DESTINATION_CODES,
+  filterCountries,
+  getCountry,
+  isCountryCode,
+  POPULAR_DESTINATION_CODES,
+  type Country,
+  type CountryCode,
+} from "./countries";
 
-export type QuoteCurrency = "CLP" | "COP" | "MXN" | "USD";
+export type { Country, CountryCode };
+export type QuoteCurrency = string;
 
-export type Country = {
-  code: CountryCode;
-  name: string;
-  adjective: string;
-  currency: QuoteCurrency;
-  currencyName: string;
-  currencyShort: string;
+export {
+  COUNTRIES,
+  COUNTRY_BY_CODE,
+  DESTINATION_CODES,
+  filterCountries,
+  getCountry,
+  isCountryCode,
+  POPULAR_DESTINATION_CODES,
 };
 
-export const COUNTRIES: Country[] = [
-  {
-    code: "CL",
-    name: "Chile",
-    adjective: "chileno",
-    currency: "CLP",
-    currencyName: "Pesos chilenos",
-    currencyShort: "pesos",
-  },
-  {
-    code: "CO",
-    name: "Colombia",
-    adjective: "colombiano",
-    currency: "COP",
-    currencyName: "Pesos colombianos",
-    currencyShort: "pesos",
-  },
-  {
-    code: "EC",
-    name: "Ecuador",
-    adjective: "ecuatoriano",
-    currency: "USD",
-    currencyName: "Dólares",
-    currencyShort: "dólares",
-  },
-  {
-    code: "MX",
-    name: "México",
-    adjective: "mexicano",
-    currency: "MXN",
-    currencyName: "Pesos mexicanos",
-    currencyShort: "pesos",
-  },
-  {
-    code: "PE",
-    name: "Perú",
-    adjective: "peruano",
-    currency: "USD",
-    currencyName: "Dólares",
-    currencyShort: "dólares",
-  },
-];
+export const RESIDENCE_CODES = ["CL", "CO", "EC", "MX", "PE"] as const;
+export type ResidenceCode = (typeof RESIDENCE_CODES)[number];
 
-export const COUNTRY_BY_CODE = Object.fromEntries(
-  COUNTRIES.map((country) => [country.code, country]),
-) as Record<CountryCode, Country>;
-
-export const DESTINATION_CODES: CountryCode[] = ["CO", "EC", "MX", "PE", "CL"];
-
-export const RESIDENCE_CODES: CountryCode[] = ["CL", "CO", "EC", "MX", "PE"];
-
-export const FX_CURRENCY_BY_COUNTRY: Record<CountryCode, QuoteCurrency> = {
-  CL: "CLP",
-  CO: "COP",
-  EC: "USD",
-  MX: "MXN",
-  PE: "USD",
-};
+export const FX_CURRENCY_BY_COUNTRY: Record<string, string> = Object.fromEntries(
+  COUNTRIES.map((country) => [country.code, country.currency]),
+);
 
 export const BANKS_SHOWN = [
   "BCP",
@@ -79,10 +39,11 @@ export const BANKS_SHOWN = [
   "Interbank",
 ] as const;
 
-export const BANKS_BY_COUNTRY: Record<CountryCode, string[]> = {
+const BANKS_BY_COUNTRY: Record<string, string[]> = {
   CL: ["Banco de Chile", "BancoEstado", "Santander", "BCI", "Otro"],
   CO: ["Bancolombia", "Davivienda", "Nequi", "BBVA", "Otro"],
   EC: ["Banco Pichincha", "Banco Guayaquil", "Produbanco", "Otro"],
+  ES: ["Santander", "BBVA", "CaixaBank", "Sabadell", "Otro"],
   MX: ["BBVA", "Banorte", "Santander", "Citibanamex", "Otro"],
   PE: [
     "BCP",
@@ -92,8 +53,15 @@ export const BANKS_BY_COUNTRY: Record<CountryCode, string[]> = {
     "Banco de la Nación",
     "Otro",
   ],
+  US: ["Chase", "Bank of America", "Wells Fargo", "Citibank", "Otro"],
 };
 
-export function getCountry(code: CountryCode): Country {
-  return COUNTRY_BY_CODE[code];
+export { BANKS_BY_COUNTRY };
+
+export function banksForCountry(code: string): string[] {
+  return BANKS_BY_COUNTRY[code] ?? ["Otro"];
+}
+
+export function isResidenceCode(value: string): value is ResidenceCode {
+  return (RESIDENCE_CODES as readonly string[]).includes(value);
 }

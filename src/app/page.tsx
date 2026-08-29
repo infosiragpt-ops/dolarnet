@@ -3,7 +3,7 @@ import { QuoteCalculator } from "@/components/calculator/QuoteCalculator";
 import { MarketingShell } from "@/components/layout/MarketingShell";
 import { Button } from "@/components/ui/Button";
 import { Stamp } from "@/components/ui/Stamp";
-import { BANKS_SHOWN, COUNTRIES } from "@/lib/corridors";
+import { BANKS_SHOWN, getCountry, POPULAR_DESTINATION_CODES } from "@/lib/corridors";
 
 export default function HomePage() {
   return (
@@ -12,7 +12,7 @@ export default function HomePage() {
         <div className="pointer-events-none absolute inset-x-0 top-0 h-24 bg-gradient-to-b from-yellow/40 to-transparent" />
         <div className="mx-auto grid max-w-6xl items-center gap-12 px-4 py-12 sm:px-6 lg:grid-cols-12 lg:py-20">
           <div className="lg:col-span-6">
-            <Stamp>Perú · corredores LATAM</Stamp>
+            <Stamp>Perú · envíos al mundo</Stamp>
             <h1 className="mt-5 max-w-xl font-display text-[44px] leading-[0.95] tracking-[-0.03em] text-ink sm:text-[64px]">
               Envía dinero rápido, fácil y barato
             </h1>
@@ -25,18 +25,24 @@ export default function HomePage() {
             </p>
             <p className="mt-4 max-w-md text-[15px] leading-7 text-muted">
               Cotiza en soles, transfiere a Dolarnett y el destinatario recibe
-              en Ecuador, Chile, Colombia, México o Perú.
+              en cualquier país del mundo.
             </p>
             <div className="mt-7 flex flex-wrap items-center gap-3">
-              {COUNTRIES.map((country) => (
-                <span
-                  key={country.code}
-                  className="inline-flex items-center gap-2 rounded-full border border-ink/10 bg-white px-2.5 py-1.5 text-[12px] font-semibold"
-                >
-                  <Flag code={country.code} size={22} />
-                  {country.name}
-                </span>
-              ))}
+              {POPULAR_DESTINATION_CODES.map((code) => {
+                const country = getCountry(code);
+                return (
+                  <span
+                    key={country.code}
+                    className="inline-flex items-center gap-2 rounded-full border border-ink/10 bg-white px-2.5 py-1.5 text-[12px] font-semibold"
+                  >
+                    <Flag code={country.code} size={22} />
+                    {country.name}
+                  </span>
+                );
+              })}
+              <span className="inline-flex items-center rounded-full border border-ink/10 bg-paper-2 px-2.5 py-1.5 text-[12px] font-semibold text-ink/70">
+                y más destinos
+              </span>
             </div>
             <div className="mt-8 flex flex-wrap gap-3">
               <Button href="/registro" size="lg">
