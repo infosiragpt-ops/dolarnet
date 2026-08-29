@@ -2,6 +2,7 @@
 export const ZERO_DECIMAL_CURRENCIES = new Set([
   "BIF",
   "CLP",
+  "COP",
   "DJF",
   "GNF",
   "ISK",

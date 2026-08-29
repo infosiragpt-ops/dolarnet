@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
+import { currencyFractionDigits } from "./currencies.ts";
 import {
   COUNTRIES,
   COUNTRY_BY_CODE,
@@ -31,6 +32,14 @@ describe("country catalog", () => {
     assert.equal(getCountry("US").currency, "USD");
     assert.equal(getCountry("PE").currency, "USD");
     assert.equal(getCountry("JP").currency, "JPY");
+  });
+
+  it("uses cash decimals for common remittance currencies", () => {
+    assert.equal(currencyFractionDigits("COP"), 0);
+    assert.equal(currencyFractionDigits("CLP"), 0);
+    assert.equal(currencyFractionDigits("JPY"), 0);
+    assert.equal(currencyFractionDigits("USD"), 2);
+    assert.equal(currencyFractionDigits("BHD"), 3);
   });
 
   it("keeps popular shortcuts", () => {
