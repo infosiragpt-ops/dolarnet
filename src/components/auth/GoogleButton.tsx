@@ -1,4 +1,8 @@
-import { continueWithGoogle } from "@/lib/auth-actions";
+"use client";
+
+import { useState } from "react";
+import { signIn } from "next-auth/react";
+import { residenceCookieString } from "@/lib/auth-env";
 import type { CountryCode } from "@/lib/corridors";
 
 type GoogleButtonProps = {
@@ -12,6 +16,8 @@ export function GoogleButton({
   country,
   label = "Continuar con Google",
 }: GoogleButtonProps) {
+  const [pending, setPending] = useState(false);
+
   if (!configured) {
     return (
       <div className="space-y-2">
@@ -34,17 +40,32 @@ export function GoogleButton({
     );
   }
 
+  async function startGoogle() {
+    if (pending) return;
+    if (country) {
+      document.cookie = residenceCookieString(
+        country,
+        window.location.protocol === "https:",
+      );
+    }
+    setPending(true);
+    try {
+      await signIn("google", { callbackUrl: "/dashboard" });
+    } catch {
+      setPending(false);
+    }
+  }
+
   return (
-    <form action={continueWithGoogle}>
-      {country ? <input type="hidden" name="country" value={country} /> : null}
-      <button
-        type="submit"
-        className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-full bg-ink text-[15px] font-semibold text-white transition hover:bg-ink/90"
-      >
-        <GoogleMark />
-        {label}
-      </button>
-    </form>
+    <button
+      type="button"
+      onClick={startGoogle}
+      disabled={pending}
+      className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-full bg-ink text-[15px] font-semibold text-white transition hover:bg-ink/90 disabled:opacity-70"
+    >
+      <GoogleMark />
+      {pending ? "Conectando…" : label}
+    </button>
   );
 }
 
