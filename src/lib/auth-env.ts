@@ -18,13 +18,43 @@ export function authUrl() {
   return process.env.AUTH_URL?.trim() ?? "";
 }
 
+function isPlaceholderCredential(value: string) {
+  const normalized = value.toLowerCase();
+  if (!normalized) return true;
+  if (normalized.startsWith("your-")) return true;
+  if (normalized === "placeholder" || normalized === "not-configured") return true;
+  if (normalized.includes("not-configured")) return true;
+  return false;
+}
+
 export function isGoogleConfigured() {
   const id = googleClientId();
   const secret = googleClientSecret();
-  if (!id || !secret) return false;
-  if (id.startsWith("your-") || secret.startsWith("your-")) return false;
-  if (id === "placeholder" || secret === "placeholder") return false;
+  if (isPlaceholderCredential(id) || isPlaceholderCredential(secret)) return false;
   return true;
+}
+
+/** Real Google OAuth credentials, or null so Auth.js never sees placeholders. */
+export function googleProviderOptions() {
+  if (!isGoogleConfigured()) return null;
+  return {
+    clientId: googleClientId(),
+    clientSecret: googleClientSecret(),
+  };
+}
+
+export const RESIDENCE_COOKIE_MAX_AGE = 60 * 60 * 24 * 30;
+
+/** Client-side residence cookie. Set separately so it cannot merge with Auth.js PKCE cookies. */
+export function residenceCookieString(country: string, secure: boolean) {
+  const parts = [
+    `${RESIDENCE_COOKIE}=${encodeURIComponent(country)}`,
+    "Path=/",
+    `Max-Age=${RESIDENCE_COOKIE_MAX_AGE}`,
+    "SameSite=Lax",
+  ];
+  if (secure) parts.push("Secure");
+  return parts.join("; ");
 }
 
 /**
